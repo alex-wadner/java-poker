@@ -1,6 +1,7 @@
 package com.techelevator.PokerGame;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.techelevator.models.Card;
@@ -39,10 +40,19 @@ public class PokerApp {
 				System.out.println(">>> Try again <<<");			
 			} else {
 				for (int i = 0; i < opponents; i++) {
-					String[] names = {"Igor", "Ludwig", "Johannes", "Franz", "Anton", "Gustav", "Felix"};
+					List<String> names = new ArrayList<String>();
+					names.add("Igor");
+					names.add("Ludwig");
+					names.add("Johannes");
+					names.add("Franz");
+					names.add("Antonin");
+					names.add("Gustav");
+					names.add("Felix");
 					ComputerPlayer computer = new ComputerPlayer();
 					players.add(computer);
-					computer.setName(names[i]);
+					int index = (int)(Math.random() * names.size());
+					computer.setName(names.get(index));
+					names.remove(index); //not working
 				}
 				break;
 			}
@@ -64,6 +74,68 @@ public class PokerApp {
 		determineWinner();
 	}
 	
+	public void blinds() { //simply assigns big and small blinds in a rotating fashion, automatically takes the blinds, and if needed puts that player all in if their blind is >= their money.
+		System.out.println("\n*********************************************************************");
+		if (turn % 5 == 0) {
+			smallBlind *= 2;
+			bigBlind *= 2;
+			System.out.println("\nThe blinds increased!");
+		}
+		if (blindsCounter == players.size()) {
+			blindsCounter = 0;
+		}
+		
+		players.get(blindsCounter).setBigBlind(true);
+		if (blindsCounter + 1 == players.size()) {
+			players.get(0).setSmallBlind(true);
+		} else {
+			players.get(blindsCounter + 1).setSmallBlind(true);
+		}
+		
+		for (Player player : players) {
+			if (player.isBigBlind()) {
+				if (!player.bet(bigBlind)) {
+					pot += player.getMoney();
+					player.setMoney(0);
+					player.setAllIn(true);
+				} else {
+					pot += bigBlind;
+				}
+			}
+			if (player.isSmallBlind() ) {
+				if (!player.bet(smallBlind)) {
+					pot += player.getMoney();
+					player.setMoney(0);
+					player.setAllIn(true);
+				} else {
+					pot += smallBlind;
+				}
+			}
+		}
+		
+//		if (!players.get(blindsCounter).bet(bigBlind)) {
+//			players.get(blindsCounter).bet(players.get(blindsCounter).getMoney());
+//			players.get(blindsCounter).setAllIn(true);
+//		}
+//		players.get(blindsCounter).setBigBlind(true);
+//		pot += bigBlind; // wrong = should bet whatever they have if they're all in
+//		if (blindsCounter == players.size() - 1) {
+//			if (!players.get(0).bet(smallBlind)) {
+//				players.get(0).bet(players.get(0).getMoney());
+//				players.get(0).setAllIn(true);
+//			}
+//			players.get(0).setSmallBlind(true);
+//		} else {
+//			if (!players.get(blindsCounter + 1).bet(smallBlind)) {
+//				players.get(blindsCounter + 1).bet(players.get(blindsCounter + 1).getMoney());
+//				players.get(blindsCounter + 1).setAllIn(true);
+//			}
+//			players.get(blindsCounter + 1).setSmallBlind(true);
+//		}
+//		pot += smallBlind; // wrong = should bet whatever they have if they're all in
+//		blindsCounter++;
+	}
+	
 	public void deal() {
 		for (Player player : players) {
 			for (int i = 0; i < 2; i++) {
@@ -78,32 +150,26 @@ public class PokerApp {
 		if (human.isBigBlind()) System.out.println("\n>>> You are big blind.\n");
 		
 		for (Player player : players) {
+			int call = 0;
 			if (player.isSmallBlind() && !player.isAllIn()) {
-				if (-1 == player.respondCall("The blind is $" + smallBlind + ". ", smallBlind)) { 
-					player.setFolded(true);
-					System.out.println(player.getName() + " folded.");
-				} else {
-					pot += smallBlind;
-					if (player.isAllIn()) {
-						System.out.println(player.getName() + " is all in!");
-					} else {
-						System.out.println(player.getName() + " calls.");						
-					}
-				}
+				call = player.respondCall("The blind is $" + smallBlind + ". ", smallBlind);
 			}
 			if (!player.isSmallBlind() && !player.isBigBlind()) {
-				if (-1 == player.respondCall("The blind is $" + bigBlind + ". ", bigBlind)) {
-					player.setFolded(true);
-					System.out.println(player.getName() + " folded.");
+				call = player.respondCall("The blind is $" + bigBlind + ". ", bigBlind);
+			}
+			
+			if (-1 == call) { 
+				player.setFolded(true);
+				System.out.println(player.getName() + " folded.");
+			} else {
+				pot += call;
+				if (player.isAllIn()) {
+					System.out.println(player.getName() + " is all in!");
 				} else {
-					pot += bigBlind;
-					if (player.isAllIn()) {
-						System.out.println(player.getName() + " is all in!");
-					} else {
-						System.out.println(player.getName() + " calls.");						
-					}
+					System.out.println(player.getName() + " calls.");						
 				}
 			}
+//			player.resetTotalWager();
 		}
 		allIn();
 		checkForWinner();
@@ -153,39 +219,6 @@ public class PokerApp {
 		if (activePlayers.size() == 1) {
 			banker(activePlayers);
 		}
-	}
-	
-	public void blinds() { //simply assigns big and small blinds in a rotating fashion, and puts that player all in if their blind is >= their money.
-		System.out.println("\n*********************************************************************");
-		if (turn % 5 == 0) {
-			smallBlind *= 2;
-			bigBlind *= 2;
-			System.out.println("\nThe blinds increased!");
-		}
-		if (blindsCounter >= players.size()) {
-			blindsCounter = 0;
-		}
-		if (!players.get(blindsCounter).bet(bigBlind)) {
-			players.get(blindsCounter).bet(players.get(blindsCounter).getMoney());
-			players.get(blindsCounter).setAllIn(true);
-		}
-		players.get(blindsCounter).setBigBlind(true);
-		pot += bigBlind;
-		if (blindsCounter == players.size() - 1) {
-			if (!players.get(0).bet(smallBlind)) {
-				players.get(0).bet(players.get(0).getMoney());
-				players.get(0).setAllIn(true);
-			}
-			players.get(0).setSmallBlind(true);
-		} else {
-			if (!players.get(blindsCounter + 1).bet(smallBlind)) {
-				players.get(blindsCounter + 1).bet(players.get(blindsCounter + 1).getMoney());
-				players.get(blindsCounter + 1).setAllIn(true);
-			}
-			players.get(blindsCounter + 1).setSmallBlind(true);
-		}
-		pot += smallBlind;
-		blindsCounter++;
 	}
 	
 	public List<Player> setBettingOrder() { //determines who bets first according to blinds. Small blind bets first, big blind bets last. 
@@ -329,7 +362,7 @@ public class PokerApp {
 		boolean evenSplit = false;
 		for (int i = 0; i < winners.size(); i++) { // checks to see if all players wagered the same amount
 			if (winners.get(0).getTotalWager() != winners.get(i).getTotalWager()) {
-				evenSplit = false;
+				evenSplit = false; // delete?
 				break;
 			} else {
 				evenSplit = true;
@@ -377,17 +410,10 @@ public class PokerApp {
 		if (returningPlayers.size() == 1) {
 			System.out.println("YOU BEAT EVERYONE! Nice card playing. Come back and play again soon!");
 			System.exit(1);
-		}
-		
+		}		
 		players = returningPlayers;
-		pot = 0;
-		wager = 0;
-		turn++;
-		
-		for (Player player : players) {
-			player.resetHands();
-		}
-		
+
+		resetPlayers();
 		getStatus();
 		String response = input.getUserInput("\n\nPress any key for the next hand... \n('X' to Quit) ");
 		if (response.toLowerCase().equals("x")) {
@@ -397,6 +423,17 @@ public class PokerApp {
 		}
 		
 		play();
+	}
+	
+	public void resetPlayers() {
+		pot = 0;
+		wager = 0;
+		turn++;
+		blindsCounter++;
+		
+		for (Player player : players) {
+			player.resetHands();
+		}
 	}
 
 	public void getStatus() {

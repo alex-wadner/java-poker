@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.techelevator</groupId>
-    <artifactId>m02-capstone-server</artifactId>
+    <artifactId>PokerGame</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>tenmo</name>
     <description>TE Bucks Payment System</description>

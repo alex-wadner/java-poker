@@ -7,7 +7,7 @@ import com.techelevator.services.TestService;
 
 public class ComputerPlayer extends Player{
 	
-	//HandOddsService odds = new HandOddsService();
+//	HandOddsService odds = new HandOddsService();
 	TestService odds = new TestService();
 	
 	private String name;
@@ -56,11 +56,11 @@ public class ComputerPlayer extends Player{
 	public int getMoney() {
 		return money;
 	}
+	public void setMoney(int money) {
+		this.money = money;
+	}
 	public void winMoney(int amount) {
 		money += amount;
-	}
-	public void loseMoney(int amount) {
-		money -= amount;
 	}
 	public int getWager() {
 		return wager;

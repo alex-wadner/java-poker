@@ -50,11 +50,11 @@ public abstract class Player {
 	public int getMoney() {
 		return money;
 	}
+	public void setMoney(int money) {
+		this.money = money;
+	}
 	public void winMoney(int amount) {
 		money += amount;
-	}
-	public void loseMoney(int amount) {
-		money -= amount;
 	}
 	public int getWager() {
 		return wager;
@@ -102,6 +102,10 @@ public abstract class Player {
 	
 	public boolean bet(int amount) {
 		return false;
+	}
+	
+	public void resetTotalWager() {
+		totalWager = 0;
 	}
 	
 	public void resetHands() {
